@@ -6,6 +6,13 @@ env:
   - TRAVIS_JDK=8
   - TRAVIS_JDK=11
 
+global:
+  # encrypt with: travis encrypt --pro BINTRAY_USER=...
+  - secure: "TYv7WiEXuF4lELHl8H1L3YIhXG0prIWyWMaEmm5wNOKupwuZ2lOKuT4OdSWxqoPjDU9SneDocJYjsodIpSTVlr8cCDIb5Wx2UE9ar07kL1BtOa1pGZdcUIB2UuckQbvR2SCnYn1uFYWxi73AHxX+QGFYF8us7G3Ltbapy1ZID3dVkFJRsF86+VzwQ+lM9owsgz9nDiPDzlxDZ3sZcNbd92nT1Z/LllaTuntSPCMttWR2QrWTFuu3Aa77PbIEtmc23SLWaqtLyHWDXlmSo63LsFHv88qLF7DDRN0khqGKptnAS6F9+DIpGgO+ZIrbuVk7Uu2ji3YyjM/ISOnct+3/h39BGTbVUYPKWx41iD8HiwSZ24/0xE91ywwm9Jq/yVLkAtPJ2NCS0zP/9jbu8K7O9BVyre4QA3VJ2mXMlrWj6CSgl1igLkGdfEI8UNkOm+CbEZfPTQv1XbNRj5vI9zL4bRGVOZvxkFK8FtmsaXEDByWk5slcf5u3+o0Q60CQSTXQ9rQgtovSq3brJbIPBEFlTu0O1sPzg5L33G6fkLeXpw2PaWi5ouyCDmMbNgKGnT9i5c51gj3/sgcoAKtc9KK7z3yPaDurTDhJL1tv4W9iIJCQ+YSPuEYmj6ZCtQ9Ni1HC6dZSmh5XzvuOZ73GlV1GYGL/K67LYmA1mPfVaPDPCDQ="
+
+  # encrypt with: travis encrypt --pro BINTRAY_PASS=...
+  - secure: "SbxN0f2s68e4RphfZPHWVX6RnOQfKW9DD0ALCW7sPh1oEMf3cY58rMCGIxFjrHxK+smYAERXWqFK1w6e0KGPXQ+FknWDY7zfGQO8xkI9EiIxZfdw91usibgiCD4UNKRdK/v6RydVKHo4R1Vh9GnCqo2zTGvnLEyRK1GKYaM9eEzeW/nukHrsgV/zDWEbANm9LINFiPP1PvUnEJEl0AyZx6aMi/Q04ZJ8BBUwQ09Z1xIQYzon65iDgR9IxEBxpjSuzOwwmEtu0kAKvDLPJLww4cp9+3Bpd6BdQOJaG4a1d0/f913dX29xltyfiHOv/f9AE/smcvrbUNieLRp2fmv1mfEDgOjrHvzQlYYV+Vb8B1un9WMQPTVp6PFcY6BhJOekVfaFyQiXniyLg9YUG4rgqVb/l0Uk47p1jAhG2ePoghog6EDeGXgMG77oywo/aioTznQp689UALc+jcEIzXaO5EPKjxkftQbuLuw63l3XB1ka08LYHHz+fep+/egKVqqOFQVvXTwE9AQT3A8psrTNx9nArwovspcuWgppd6moXBon/oOspCSWNa7BkgodvQpatNUm3PYj/NeBGhWd2W7WIIB52BDbT6/YU5rpDLbGFWSAAw90YZMFlD5K7Xsn51Qqzm2YEmqwzI9XHzgQEcmHMgyPfB8lUKw3M9R9CK7aqYQ="
+
 before_install:
   - curl -sL https://raw.githubusercontent.com/shyiko/jabba/0.11.2/install.sh | bash && . ~/.jabba/jabba.sh
 
@@ -27,6 +34,13 @@ jobs:
       script: sbt +jacoco
 
     - stage: test
+
+    - script: sbt +mimaReportBinaryIssues
+      name: "Validations JDK 8"
+      env: TRAVIS_JDK=8
+    - script: sbt +mimaReportBinaryIssues
+      name: "Validations JDK11"
+      env: TRAVIS_JDK=11
     - script: sbt +publishLocal +plugin/test +plugin/scripted
       name: "Test plugins JDK 8"
       env: TRAVIS_JDK=8
@@ -41,8 +55,8 @@ jobs:
       env: TRAVIS_JDK=11
 
     - stage: deploy
-      name: "TEMP Publish artifacts to Bintray"
-      script: sbt +mimaReportBinaryIssues
+      name: "Publish artifacts to Bintray"
+      script: sbt +publish
       env: TRAVIS_JDK=11
 
 stages:
@@ -63,6 +77,12 @@ cache:
 before_cache:
   - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
   - find $HOME/.sbt -name "*.lock" -delete
+
+
+branches:
+  only:
+    - master
+    - /^\d+\.\d+(\.\d+)?(-\S*)?$/
 
 #notifications:
 #  webhooks:
